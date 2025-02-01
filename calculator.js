@@ -1,80 +1,46 @@
-const calculator = document.querySelector(".calculator");
-const keys = calculator.querySelector(".calculator__keys");
-const display = document.querySelector(".calculator__display");
+const display = document.querySelector(".display");
+const buttons = document.querySelectorAll(".buttons button");
 
-keys.addEventListener("click", (e) => {
-  if (e.target.matches("button")) {
-    const key = e.target;
-    const action = key.dataset.action;
-    const keyContent = key.textContent;
-    const displayedNum = display.textContent;
-    const previousKeyType = calculator.dataset.previousKeyType;
+let hasDecimal = false; // Variable pour suivre si un point a déjà été ajouté
 
-    if (!action) {
-      if (displayedNum === "0" || previousKeyType === "operator") {
-        display.textContent = keyContent;
-      } else {
-        display.textContent = displayedNum + keyContent;
+// Initialiser l'affichage à 0
+display.value = "0";
+
+buttons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const value = button.value;
+
+    if (value === "C") {
+      display.value = "0"; // Réinitialiser à 0
+      hasDecimal = false;
+    } else if (value === "=") {
+      try {
+        display.value = eval(display.value) || "0"; // Calculer l'expression
+        hasDecimal = display.value.includes(".");
+      } catch {
+        display.value = "Erreur";
       }
-      calculator.dataset.previousKey = "number";
-      console.log("number key!");
-    }
-
-    if (
-      action === "add" ||
-      action === "subtract" ||
-      action === "multiply" ||
-      action === "divide"
-    ) {
-      key.classList.add("is-depressed");
-      calculator.dataset.previousKeyType = "operator";
-      Array.from(key.parentNode.children).forEach((k) =>
-        k.classList.remove("is-depressed")
-      );
-
-      calculator.dataset.firstValue = displayedNum;
-      calculator.dataset.operator = action;
-
-      console.log("operator key!");
-    }
-
-    if (action === "decimal") {
-      if (!displayedNum.includes(".")) {
-        display.textContent = displayedNum + ".";
-      } else if (previousKeyType === "operator") {
-        display.textContent = "0.";
-      }
-      calculator.dataset.previousKey = "decimal";
-      console.log("decimal key!");
-    }
-
-    if (action === "clear") {
-      calculator.dataset.previousKeyType = "clear";
-      console.log("clear key!");
-    }
-
-    if (action === "calculate") {
-      const firstValue = calculator.dataset.firstValue;
-      const operator = calculator.dataset.operator;
-      const secondValue = displayedNum;
-
-      const calculate = (n1, operator, n2) => {
-        let result = "";
-        if (operator === "add") {
-          result = parseFloat(n1) + parseFloat(n2);
-        } else if (operator === "subtract") {
-          result = parseFloat(n1) - parseFloat(n2);
-        } else if (operator === "multiply") {
-          result = parseFloat(n1) * parseFloat(n2);
-        } else if (operator === "divide") {
-          result = parseFloat(n1) / parseFloat(n2);
+    } else if (value === ".") {
+      if (!hasDecimal) {
+        if (
+          display.value === "0" ||
+          isNaN(display.value[display.value.length - 1])
+        ) {
+          display.value += "."; // Ajouter directement un point sans 0 redondant
+        } else {
+          display.value += ".";
         }
-        return result;
-      };
-
-      calculator.dataset.previousKeyType = "calculate";
-      display.textContent = calculate(firstValue, operator, secondValue);
-      console.log("equal key!");
+        hasDecimal = true;
+      }
+    } else {
+      if (display.value === "0" && !isNaN(value)) {
+        display.value = value; // Remplacer le 0 initial par la nouvelle valeur
+      } else {
+        display.value += value;
+      }
+      if (isNaN(value) && value !== ".") {
+        hasDecimal = false;
+      }
     }
-  }
+  });
 });
